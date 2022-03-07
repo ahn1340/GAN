@@ -1,5 +1,8 @@
 # GAN
-GAN implementation with Pytorch
+GAN implementation from scratch with Pytorch
 
-This project is to implement GAN for the purpose of personal understanding.
+
+# TODO
+Add Feature Matching
+
 
