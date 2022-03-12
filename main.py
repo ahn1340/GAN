@@ -1,6 +1,9 @@
 import os
 import torch
+import ruamel_yaml as yaml
+import logging
 
+from attrdict import AttrDict
 from torch.utils.data import DataLoader, RandomSampler
 
 # Custom Modules
@@ -9,24 +12,24 @@ from model import Generator, Discriminator
 from dataset import CustomDataset
 from trainer import Trainer
 
-class CFG:
-    def __init__(self):
-        self.max_epoch = 10
-        self.batch_size = 8
-        self.z_dim = 64
-        self.n_feat = 64
-        self.folder = './data/img_align_celeba/img_align_celeba/'
-        self.dataset = CustomDataset(self.folder)
-        self.device = torch.device("cuda" if torch.cuda.is_available() else 'cpu')
-
 if __name__ == "__main__":
-    cfg = CFG()
+    # load configs
+    with open("config/hyperparameters.yaml") as f:
+        cfg = yaml.safe_load(f)
+    cfg = AttrDict(cfg)
+
+    # set device
+    cfg.device = torch.device("cuda" if torch.cuda.is_available() else 'cpu')
+
+    # create dataset
+    dataset = CustomDataset(os.path.abspath(cfg.folder))
+
     ####### Define data loader and models ##########
-    train_sampler = RandomSampler(data_source=cfg.dataset,
+    train_sampler = RandomSampler(data_source=dataset,
                                   replacement=True,
-                                  num_samples=9000,
+                                  num_samples=int(1e100),  # make the dataloader "infinite"
                                   )
-    dataloader = DataLoader(cfg.dataset,
+    dataloader = DataLoader(dataset,
                             batch_size=cfg.batch_size,
                             sampler=train_sampler,
                             pin_memory=True,
@@ -49,17 +52,16 @@ if __name__ == "__main__":
     params_D = D.parameters()
 
     optimizerG = torch.optim.Adam(params=params_G,
-                            lr=2e-4,
-                            betas=(0.5, 0.999),
-                            weight_decay=1e-3,
+                            lr=cfg.lr_G,
+                            betas=(cfg.beta1_G, cfg.beta2_G),
+                            weight_decay=cfg.weight_decay_G,
                             )
     optimizerD = torch.optim.Adam(params=params_D,
-                            lr=2e-4,
-                            betas=(0.5, 0.999),
-                            weight_decay=1e-3,
+                            lr=cfg.lr_D,
+                            betas=(cfg.beta1_D, cfg.beta2_D),
+                            weight_decay=cfg.weight_decay_D,
                             )
 
-    cfg.dataloader = dataloader
     trainer = Trainer(cfg,
                       G,
                       D,
@@ -68,4 +70,5 @@ if __name__ == "__main__":
                       optimizerD,
                       )
 
+    # Train models
     trainer.train()
