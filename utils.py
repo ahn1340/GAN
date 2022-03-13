@@ -193,7 +193,7 @@ def visualize_progress(save_folder, epochs=100):
     concatenated_images = []
     for epoch in range(epochs):
         images = sorted(glob.glob(os.path.join(save_folder, f"{epoch}_*")))
-        im_array = [cv2.cvtColor(cv2.imread(im), cv2.COLOR_BGR2RGB) for im in images]
+        im_array = [cv2.imread(im) for im in images]
         vertical = []
         for i in range(4):
             horizontal = []
@@ -205,4 +205,4 @@ def visualize_progress(save_folder, epochs=100):
         concatenated_images.append(concatenated_im)
 
     # Create gif from concatenated images
-    imageio.mimsave(os.path.join(save_folder, "progress.gif"), concatenated_images)
+    imageio.mimsave("progress.gif", concatenated_images)
