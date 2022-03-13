@@ -64,7 +64,7 @@ class Trainer:
 
         # initialize a set of noise vectors which will be used to
         # visualize generator's progress
-        self.noise = generate_noise(16, self.z_dim)
+        self.noise = generate_noise(16, self.z_dim).to(self.device)
 
         #TODO: log config
 
