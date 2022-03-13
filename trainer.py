@@ -58,9 +58,7 @@ class Trainer:
         self.wandb_logger = WandbLogger(project=self.cfg.project)
 
         # set max iteration per epoch
-        num_samples = self.cfg.n_samples_per_epoch
-        one_iter_batch_size = (self.cfg.nG + self.cfg.nD) * self.batch_size
-        self.max_iter = num_samples // one_iter_batch_size
+        self.max_iter = self.cfg.max_iter
 
         # initialize a set of noise vectors which will be used to
         # visualize generator's progress
