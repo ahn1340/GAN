@@ -1,5 +1,4 @@
-import time
-import tqdm
+from tqdm.auto import tqdm
 import torch
 import logging
 import wandb
@@ -9,6 +8,7 @@ from torch import nn
 # Custom module
 from utils import AverageMeter, generate_noise, WandbLogger, \
     save_checkpoint
+
 
 class Trainer:
     def __init__(self,
@@ -23,6 +23,7 @@ class Trainer:
         self.z_dim = cfg.z_dim
         self.max_epoch = cfg.max_epoch
         self.batch_size = cfg.batch_size
+        self.loss_type = cfg.loss_type
         self.device = cfg.device
 
         # stuff
@@ -33,8 +34,6 @@ class Trainer:
         self.optimizerD = optimizerD
 
         # other stuff
-        #self.loss_type = "adversarial"
-        self.loss_type = "feature_matching"
         self.dataloader_iterator = iter(self.dataloader)
 
         # Loss Functions
@@ -52,8 +51,10 @@ class Trainer:
             self.after_train()
 
     def before_train(self):
+        # set logging level
+        logging.basicConfig(filename='train.log', level=logging.INFO)
+
         # initialize WandbLogger
-        logging.basicConfig(filename='train.log', level=logging.DEBUG)
         self.wandb_logger = WandbLogger(project=self.cfg.project)
 
         # set max iteration per epoch
@@ -61,11 +62,11 @@ class Trainer:
         one_iter_batch_size = (self.cfg.nG + self.cfg.nD) * self.batch_size
         self.max_iter = num_samples // one_iter_batch_size
 
-        logging.info(f"max_iter: {self.max_iter}")
-
         # initialize a set of noise vectors which will be used to
         # visualize generator's progress
         self.noise = generate_noise(16, self.z_dim)
+
+        #TODO: log config
 
     def after_train(self):
         # finish wandb logger
@@ -105,22 +106,46 @@ class Trainer:
                      f"D_G_z: {self.D_G_z.val}  D_x: {self.D_x.val}")
 
     def train_in_iter(self):
-        for self.iter in range(self.max_iter):
-            self.before_iter()
-            self.train_one_iter()
-            self.after_iter()
+        with tqdm(range(self.max_iter), position=0, leave=True,
+                  desc=f"Epoch {self.epoch}") as t:
+            for self.iter in t:
+                self.before_iter()
+                self.train_one_iter()
+                self.after_iter(t)
 
     def before_iter(self):
         pass
 
-    def after_iter(self):
+    def after_iter(self, t):
+        """
+        1. log metrics to WandB
+        2. print progress
+        """
         values = {"D_loss": self.D_loss.value,
                   "G_loss": self.G_loss.value,
                   "D(G(z))": self.D_G_z.value,
                   "D(x)": self.D_x.value,
                  }
-
         self.wandb_logger.log_metrics(metrics=values)
+
+        #TODO: print this without writing to new line
+        #t.set_description('Epoch {} [{}/{}] '
+        #                  # 'time: {:.3f}\n'
+        #                  'D_loss: {D_loss.value:.3f} ({D_loss.val:.3f})\n'
+        #                  'G_loss: {G_loss.value:.3f} ({G_loss.val:.3f})\n'
+        #                  'D(G(z)): {D_G_z.value:.3f} ({D_G_z.val:.3f})\n'
+        #                  'D(x): {D_x.value:.3f} ({D_x.val:.3f})\n'
+        #                  .format(self.epoch,
+        #                          self.iter + 1,
+        #                          self.max_iter,
+        #                          # batch_time,
+        #                          D_loss=self.D_loss,
+        #                          G_loss=self.G_loss,
+        #                          D_G_z=self.D_G_z,
+        #                          D_x=self.D_x,
+        #                          ),
+        #                  refresh=True)
+        #t.clear()
 
     def train_one_iter(self):
         for i in range(self.cfg.nD):

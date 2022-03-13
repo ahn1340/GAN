@@ -1,6 +1,6 @@
 import os
 import torch
-import ruamel_yaml as yaml
+import ruamel.yaml as yaml
 import logging
 
 from attrdict import AttrDict
