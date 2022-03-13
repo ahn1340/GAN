@@ -1,8 +1,10 @@
-from tqdm.auto import tqdm
-import torch
+import os
 import logging
+import cv2
+import torch
 import wandb
 
+from tqdm.auto import tqdm
 from torch import nn
 
 # Custom module
@@ -57,12 +59,10 @@ class Trainer:
         # initialize WandbLogger
         self.wandb_logger = WandbLogger(project=self.cfg.project)
 
-        # set max iteration per epoch
-        self.max_iter = self.cfg.max_iter
-
         # initialize a set of noise vectors which will be used to
         # visualize generator's progress
         self.noise = generate_noise(16, self.z_dim).to(self.device)
+        os.makedirs(self.cfg.save_folder, exist_ok=True)
 
         #TODO: log config
 
@@ -73,10 +73,10 @@ class Trainer:
         # save current models
         save_checkpoint(self.discriminator,
                         save_dir='weights/',
-                        model_name='Discriminator')
+                        model_name='discriminator')
         save_checkpoint(self.generator,
                         save_dir='weights/',
-                        model_name='Generator')
+                        model_name='generator')
 
     def train_in_epoch(self):
         for self.epoch in range(self.max_epoch):
@@ -96,6 +96,13 @@ class Trainer:
         #TODO: implement this as a method of wandblogger class
         ims = self.generator(self.noise)
         ims = (ims + 1) / 2
+        # save to disk
+        for i in range(ims.size()[0]):
+            im = ims[i].permute(1,2,0)
+            im = im * 255
+            im = im.cpu().detach().numpy()
+            cv2.imwrite(os.path.join(self.cfg.save_folder, f"{self.epoch}_{i}.jpg"), im)
+
         ims = [wandb.Image(ims[i]) for i in range(ims.size()[0])]
         values = {"Generator Progress": ims}
 
@@ -104,7 +111,7 @@ class Trainer:
                      f"D_G_z: {self.D_G_z.val}  D_x: {self.D_x.val}")
 
     def train_in_iter(self):
-        with tqdm(range(self.max_iter), position=0, leave=True,
+        with tqdm(range(self.cfg.max_iter), position=0, leave=True,
                   desc=f"Epoch {self.epoch}") as t:
             for self.iter in t:
                 self.before_iter()

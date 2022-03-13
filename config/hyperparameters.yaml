@@ -10,6 +10,7 @@ n_feat: 64  # number of feature maps of last layer in generator
 #folder: ./data/img_align_celeba/img_align_celeba/
 folder: /content/img_align_celeba/
 loss_type: 'adversarial'  # should be one of ['adversarial', 'feature_matching']
+save_folder: ./images/
 
 # discriminator
 nD: 1  # number of discriminator update steps per iteration

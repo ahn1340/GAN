@@ -1,6 +1,15 @@
 import os
+import cv2
+import glob
+import imageio
+
+import numpy as np
 import torch
 from torch import nn
+
+# Need this line to make visualizing work
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
+
 
 
 class AverageMeter:
@@ -174,3 +183,26 @@ def save_checkpoint(model, save_dir, model_name=""):
     }
     torch.save(ckpt_state, filename)
 
+
+def visualize_progress(save_folder, epochs=100):
+    """
+    Args :
+        save_folder: folder where images are
+    """
+    # get all images from folder
+    concatenated_images = []
+    for epoch in range(epochs):
+        images = sorted(glob.glob(os.path.join(save_folder, f"{epoch}_*")))
+        im_array = [cv2.cvtColor(cv2.imread(im), cv2.COLOR_BGR2RGB) for im in images]
+        vertical = []
+        for i in range(4):
+            horizontal = []
+            for j in range(4):
+                horizontal.append(im_array[4*i+j])
+            hor_im = np.concatenate(horizontal, 1)
+            vertical.append(hor_im)
+        concatenated_im = np.concatenate(vertical, 0)
+        concatenated_images.append(concatenated_im)
+
+    # Create gif from concatenated images
+    imageio.mimsave(os.path.join(save_folder, "progress.gif"), concatenated_images)

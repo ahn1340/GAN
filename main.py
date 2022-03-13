@@ -7,7 +7,7 @@ from attrdict import AttrDict
 from torch.utils.data import DataLoader, RandomSampler
 
 # Custom Modules
-from utils import weights_init
+from utils import weights_init, visualize_progress
 from model import Generator, Discriminator
 from dataset import CustomDataset
 from trainer import Trainer
@@ -72,3 +72,6 @@ if __name__ == "__main__":
 
     # Train models
     trainer.train()
+
+    # create gif of progress
+    visualize_progress(cfg.save_folder, cfg.max_epoch)
