@@ -149,12 +149,12 @@ class Trainer:
 
     def train_one_iter(self):
         for i in range(self.cfg.nD):
-            images = next(self.dataloader_iterator)
+            images = next(self.dataloader_iterator).to(self.device)
             self.train_one_iter_D(images)
         for i in range(self.cfg.nG):
             images = None
             if self.loss_type in ['feature_matching', 'both']:
-                images = next(self.dataloader_iterator)
+                images = next(self.dataloader_iterator).to(self.device)
             self.train_one_iter_G(images)
 
     def train_one_iter_D(self, images):
