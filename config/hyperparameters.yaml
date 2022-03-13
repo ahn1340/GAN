@@ -3,13 +3,12 @@ name: celebA
 
 # general
 max_epoch: 100
-max_iter: 50
-batch_size: 32
+max_iter: 100
+batch_size: 128
 z_dim: 64  # dimension of noise
 n_feat: 64  # number of feature maps of last layer in generator
-folder: ./data/img_align_celeba/img_align_celeba/
-#folder: /content/img_align_celeba/
-n_samples_per_epoch: 1600
+#folder: ./data/img_align_celeba/img_align_celeba/
+folder: /content/img_align_celeba/
 loss_type: 'adversarial'  # should be one of ['adversarial', 'feature_matching']
 
 # discriminator
