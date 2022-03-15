@@ -11,7 +11,6 @@ from torch import nn
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 
-
 class AverageMeter:
     def __init__(self):
         self.value = 0
@@ -35,25 +34,6 @@ class AverageMeter:
     @property
     def val(self):
         return self.avg
-
-
-def generate_noise(n_samples, dim, type='normal'):
-    if type == 'normal':
-        return torch.randn(n_samples, dim)
-    elif type == 'uniform':
-        return torch.rand(n_samples, dim)
-    else:
-        raise ValueError(f"Invalid type: {type}. Must be one of ['uniform', 'normal']")
-
-
-def weights_init(m):
-    """
-    Initialize weights of given model as described in the DCGAN paper.
-    Args:
-        m (nn.Module): Pytorch model with trainable parameters
-    """
-    for name, param in m.named_parameters():
-        nn.init.normal_(param.data, 0.0, 0.02)
 
 
 class WandbLogger(object):
@@ -173,6 +153,25 @@ class WandbLogger(object):
         self.run.finish()
 
 
+def generate_noise(n_samples, dim, type='normal'):
+    if type == 'normal':
+        return torch.randn(n_samples, dim)
+    elif type == 'uniform':
+        return torch.rand(n_samples, dim)
+    else:
+        raise ValueError(f"Invalid type: {type}. Must be one of ['uniform', 'normal']")
+
+
+def weights_init(m):
+    """
+    Initialize weights of given model as described in the DCGAN paper.
+    Args:
+        m (nn.Module): Pytorch model with trainable parameters
+    """
+    for name, param in m.named_parameters():
+        nn.init.normal_(param.data, 0.0, 0.02)
+
+
 def save_checkpoint(model, save_dir, model_name=""):
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
@@ -187,10 +186,11 @@ def save_checkpoint(model, save_dir, model_name=""):
 def visualize_progress(save_folder, epochs=100):
     """
     Args :
-        save_folder: folder where images are
+        save_folder (str): folder where images are
+        epochs (ints): number epochs to visualize
     """
-    # get all images from folder
     concatenated_images = []
+    # concatenate images from each epoch
     for epoch in range(epochs):
         images = sorted(glob.glob(os.path.join(save_folder, f"{epoch}_*")))
         im_array = [cv2.imread(im) for im in images]
