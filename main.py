@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader, RandomSampler
 
 # Custom Modules
 from utils import weights_init, visualize_progress
-from model import Generator, Discriminator
+from model import Generator, Discriminator, Discriminator_MD
 from dataset import CustomDataset
 from trainer import Trainer
 
@@ -40,7 +40,12 @@ if __name__ == "__main__":
                   n_feat=cfg.n_feat,
                   )
 
-    D = Discriminator(n_feat=cfg.n_feat)
+    if cfg.minibatch_discrimination:
+        logging.info("Using minibatch discrimination")
+        D = Discriminator_MD(batch_size=cfg.batch_size, n_feat=cfg.n_feat)
+    else:
+        #logging.info("Using minibatch discr")
+        D = Discriminator(n_feat=cfg.n_feat)
 
     G.apply(weights_init)
     D.apply(weights_init)
